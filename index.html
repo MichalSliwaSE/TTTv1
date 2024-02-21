@@ -14,6 +14,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         height: 100vh;
       }
       #gameBoard {
@@ -50,37 +51,105 @@
         cursor: pointer;
       }
     </style>
-    <script>
-        const cells = document.querySelectorAll(".cell");
-        const statusText = document.querySelector("#statusText");
-        const resetButton = document.querySelector("#resetButton");
-        
-    </script>
   </head>
   <body>
     <div id="gameContainer">
-      <h1>
-        Tic Tac Toe
-        <div id="gameBoard">
-          <div class="row">
-            <div class="cell" id="cell-0"></div>
-            <div class="cell" id="cell-1"></div>
-            <div class="cell" id="cell-2"></div>
-          </div>
-          <div class="row">
-            <div class="cell" id="cell-3"></div>
-            <div class="cell" id="cell-4"></div>
-            <div class="cell" id="cell-5"></div>
-          </div>
-          <div class="row">
-            <div class="cell" id="cell-6"></div>
-            <div class="cell" id="cell-7"></div>
-            <div class="cell" id="cell-8"></div>
-          </div>
+      <h1>Tic Tac Toe</h1>
+      <div id="gameBoard">
+        <div class="row">
+          <div class="cell" id="cell-0"></div>
+          <div class="cell" id="cell-1"></div>
+          <div class="cell" id="cell-2"></div>
         </div>
-        <h2 id="statusText"></h2>
-        <button id="resetButton">Reset</button>
-      </h1>
+        <div class="row">
+          <div class="cell" id="cell-3"></div>
+          <div class="cell" id="cell-4"></div>
+          <div class="cell" id="cell-5"></div>
+        </div>
+        <div class="row">
+          <div class="cell" id="cell-6"></div>
+          <div class="cell" id="cell-7"></div>
+          <div class="cell" id="cell-8"></div>
+        </div>
+      </div>
+      <h2 id="statusText"></h2>
+      <button id="resetButton">Reset</button>
     </div>
+    <script>
+      const cells = document.querySelectorAll(".cell");
+      const statusText = document.querySelector("#statusText");
+      const resetButton = document.querySelector("#resetButton");
+      const winConditions = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6],
+      ];
+      let options = ["", "", "", "", "", "", "", "", ""];
+      let currentPlayer = "X";
+      let running = false;
+
+      initializeGame();
+
+      function initializeGame() {
+        cells.forEach((cell) => cell.addEventListener("click", cellClicked));
+        resetButton.addEventListener("click", restartGame);
+        statusText.textContent = `${currentPlayer}'s turn`;
+        running = true;
+      }
+      function cellClicked() {
+        const cellIndex = parseInt(this.id.split("-")[1]);
+
+        if (options[cellIndex] != "" || !running) {
+          return;
+        }
+        updateCell(this, cellIndex);
+
+        checkWinner();
+      }
+      function updateCell(cell, index) {
+        options[index] = currentPlayer;
+        cell.textContent = currentPlayer;
+      }
+      function changePlayer() {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        statusText.textContent = `${currentPlayer}'s turn`;
+      }
+      function checkWinner() {
+        let winnerFound = false;
+        for (let condition of winConditions) {
+          const [a, b, c] = condition;
+          if (
+            options[a] &&
+            options[a] === options[b] &&
+            options[a] === options[c]
+          ) {
+            // We have a winner
+            statusText.textContent = `${currentPlayer} wins!`;
+            winnerFound = true;
+            running = false;
+            break;
+          }
+        }
+        if (!winnerFound && !options.includes("")) {
+          statusText.textContent = "It's a draw!";
+          running = false;
+        } else {
+          changePlayer();
+        }
+      }
+
+      function restartGame() {
+        currentPlayer = "X";
+        options = ["", "", "", "", "", "", "", "", ""];
+        statusText.textContent = `${currentPlayer}'s turn`;
+        cells.forEach((cell) => (cell.textContent = ""));
+        running = true;
+      }
+    </script>
   </body>
 </html>
