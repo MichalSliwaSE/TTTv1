@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Home</title>
+    <title>Tic Tac Toe</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -75,52 +75,49 @@
       <h2 id="statusText"></h2>
       <button id="resetButton">Reset</button>
     </div>
+
     <script>
       const cells = document.querySelectorAll(".cell");
       const statusText = document.querySelector("#statusText");
       const resetButton = document.querySelector("#resetButton");
-      const winConditions = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6],
-      ];
-      let options = ["", "", "", "", "", "", "", "", ""];
-      let currentPlayer = "X";
-      let running = false;
 
-      initializeGame();
+      const initialState = {
+        winConditions: [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8],
+          [0, 3, 6],
+          [1, 4, 7],
+          [2, 5, 8],
+          [0, 4, 8],
+          [2, 4, 6],
+        ],
+        options: ["", "", "", "", "", "", "", "", ""],
+        currentPlayer: "X",
+        running: true,
+      };
 
-      function initializeGame() {
-        cells.forEach((cell) => cell.addEventListener("click", cellClicked));
-        resetButton.addEventListener("click", restartGame);
-        statusText.textContent = `${currentPlayer}'s turn`;
-        running = true;
-      }
-      function cellClicked() {
-        const cellIndex = parseInt(this.id.split("-")[1]);
-
-        if (options[cellIndex] != "" || !running) {
-          return;
+      function cellClicked(state, cellIndex) {
+        if (state.options[cellIndex] !== "" || !state.running) {
+          return state;
         }
-        updateCell(this, cellIndex);
 
-        checkWinner();
+        const updatedOptions = state.options.map((value, index) =>
+          index === cellIndex ? state.currentPlayer : value
+        );
+
+        const winner = checkWinner(updatedOptions, state.winConditions);
+        const nextPlayer = state.currentPlayer === "X" ? "O" : "X";
+
+        return {
+          ...state,
+          options: updatedOptions,
+          currentPlayer: winner ? state.currentPlayer : nextPlayer,
+          running: !winner,
+        };
       }
-      function updateCell(cell, index) {
-        options[index] = currentPlayer;
-        cell.textContent = currentPlayer;
-      }
-      function changePlayer() {
-        currentPlayer = currentPlayer === "X" ? "O" : "X";
-        statusText.textContent = `${currentPlayer}'s turn`;
-      }
-      function checkWinner() {
-        let winnerFound = false;
+
+      function checkWinner(options, winConditions) {
         for (let condition of winConditions) {
           const [a, b, c] = condition;
           if (
@@ -128,28 +125,47 @@
             options[a] === options[b] &&
             options[a] === options[c]
           ) {
-            // We have a winner
-            statusText.textContent = `${currentPlayer} wins!`;
-            winnerFound = true;
-            running = false;
-            break;
+            return true;
           }
         }
-        if (!winnerFound && !options.includes("")) {
-          statusText.textContent = "It's a draw!";
-          running = false;
-        } else {
-          changePlayer();
-        }
+        return false;
       }
 
       function restartGame() {
-        currentPlayer = "X";
-        options = ["", "", "", "", "", "", "", "", ""];
-        statusText.textContent = `${currentPlayer}'s turn`;
-        cells.forEach((cell) => (cell.textContent = ""));
-        running = true;
+        return initialState;
       }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        let currentState = initialState;
+
+        cells.forEach((cell, index) => {
+          cell.addEventListener("click", () => {
+            currentState = cellClicked(currentState, index);
+            render(currentState);
+          });
+        });
+
+        resetButton.addEventListener("click", () => {
+          currentState = restartGame();
+          render(currentState);
+        });
+
+        function render(state) {
+          cells.forEach((cell, index) => {
+            cell.textContent = state.options[index];
+          });
+
+          if (checkWinner(state.options, state.winConditions)) {
+            statusText.textContent = `${state.currentPlayer} wins!`;
+          } else if (!state.options.includes("")) {
+            statusText.textContent = "It's a draw!";
+          } else {
+            statusText.textContent = `${state.currentPlayer}'s turn`;
+          }
+        }
+
+        render(initialState);
+      });
     </script>
   </body>
 </html>
